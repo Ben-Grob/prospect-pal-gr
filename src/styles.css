@@ -142,3 +142,56 @@
     color: var(--color-foreground);
   }
 }
+
+/* Sponsor Outreach Agent design tokens */
+:root {
+  --color-background-primary: #ffffff;
+  --color-background-secondary: #f5f6f8;
+  --color-background-success: #e6f7ec;
+  --color-background-warning: #fdf4e3;
+  --color-background-info: #e8f0fe;
+  --color-text-primary: #0f172a;
+  --color-text-secondary: #4b5563;
+  --color-text-tertiary: #9ca3af;
+  --color-text-success: #15803d;
+  --color-text-warning: #b45309;
+  --color-text-info: #1d4ed8;
+  --color-text-danger: #b91c1c;
+  --color-border-tertiary: #e5e7eb;
+  --color-border-success: #86efac;
+  --color-border-warning: #fcd34d;
+  --border-radius-md: 6px;
+  --border-radius-lg: 10px;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+@layer base {
+  body {
+    background: #fafafa;
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+      "Helvetica Neue", Arial, sans-serif;
+  }
+  input, button {
+    font: inherit;
+    border-radius: var(--border-radius-md);
+    border: 0.5px solid var(--color-border-tertiary);
+    padding: 8px 12px;
+    background: var(--color-background-primary);
+    color: var(--color-text-primary);
+    outline: none;
+  }
+  input:focus {
+    border-color: #6366f1;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+  }
+  button {
+    cursor: pointer;
+    background: #0f172a;
+    color: #fff;
+    border: none;
+    font-weight: 500;
+    transition: opacity 0.15s ease;
+  }
+  button:hover:not(:disabled) { opacity: 0.9; }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+}
