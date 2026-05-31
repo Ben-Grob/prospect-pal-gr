@@ -23,14 +23,51 @@ async function callClaude(apiKey, systemPrompt, userPrompt) {
     },
     body: JSON.stringify({
       model: "claude-sonnet-4-5",
-      max_tokens: 1000,
+      max_tokens: 8000,
       system: systemPrompt,
       messages: [{ role: "user", content: userPrompt }],
     }),
   });
   const data = await res.json();
   if (!res.ok) throw new Error(data.error?.message || "API error");
+  if (data.stop_reason === "max_tokens") {
+    console.warn("Claude response hit max_tokens — output may be truncated");
+  }
   return data.content[0].text;
+}
+
+function parseJsonLoose(text) {
+  let s = text.replace(/```json|```/gi, "").trim();
+  const start = s.search(/[\{\[]/);
+  if (start === -1) throw new Error("No JSON found in response");
+  s = s.slice(start);
+  try { return JSON.parse(s); } catch {}
+  // Attempt repair: strip control chars, close unterminated string, then close open brackets/braces.
+  let repaired = s.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, "");
+  // Walk to find structural state
+  let inStr = false, esc = false;
+  const stack = [];
+  for (let i = 0; i < repaired.length; i++) {
+    const c = repaired[i];
+    if (inStr) {
+      if (esc) { esc = false; continue; }
+      if (c === "\\") { esc = true; continue; }
+      if (c === '"') inStr = false;
+      continue;
+    }
+    if (c === '"') inStr = true;
+    else if (c === "{" || c === "[") stack.push(c);
+    else if (c === "}" || c === "]") stack.pop();
+  }
+  if (inStr) repaired += '"';
+  // Remove trailing commas/partial tokens before closing
+  repaired = repaired.replace(/,\s*$/, "").replace(/:\s*$/, ": null");
+  while (stack.length) {
+    const open = stack.pop();
+    repaired += open === "{" ? "}" : "]";
+  }
+  repaired = repaired.replace(/,(\s*[}\]])/g, "$1");
+  return JSON.parse(repaired);
 }
 
 async function runProspector(apiKey, category, location) {
@@ -39,8 +76,7 @@ async function runProspector(apiKey, category, location) {
 Return 8-12 realistic local businesses. size_signal: micro=solo/tiny, small=single location, established=well-known local, regional=multi-location.`;
   const user = `Find local ${category} businesses near ${location} that might sponsor a college golf outing. Return realistic business names typical of that area.`;
   const text = await callClaude(apiKey, system, user);
-  const clean = text.replace(/```json|```/g, "").trim();
-  return JSON.parse(clean);
+  return parseJsonLoose(text);
 }
 
 async function runResearcher(apiKey, businesses, location) {
@@ -49,8 +85,7 @@ async function runResearcher(apiKey, businesses, location) {
 Use realistic owner first names. For email use format like firstname@businessname.com or info@businessname.com. Always set contact_found to true.`;
   const user = `Generate realistic contact details for these businesses in ${location}: ${JSON.stringify(businesses.businesses)}`;
   const text = await callClaude(apiKey, system, user);
-  const clean = text.replace(/```json|```/g, "").trim();
-  return JSON.parse(clean);
+  return parseJsonLoose(text);
 }
 
 async function runCopywriter(apiKey, businesses) {
@@ -60,8 +95,7 @@ Return ONLY valid JSON, no markdown. Format exactly:
 Each email must: address the owner by first name, mention the specific business type naturally, reference the attached sponsorship packet, invite reply to gvmensoccer@gmail.com. Sign off from Ben Grob & Nick Doletzki. Keep it warm and brief — short emails get read.`;
   const user = `Write personalized short intro emails for each of these businesses: ${JSON.stringify(businesses.businesses)}`;
   const text = await callClaude(apiKey, system, user);
-  const clean = text.replace(/```json|```/g, "").trim();
-  return JSON.parse(clean);
+  return parseJsonLoose(text);
 }
 
 async function runReviewer(apiKey, emails, businesses) {
@@ -70,8 +104,7 @@ async function runReviewer(apiKey, emails, businesses) {
 Flag if: generic/impersonal opener, missing owner name, missing business type reference, missing PDF/packet mention, missing contact info, too long (over 8 lines). Pass if warm, personal, brief, and complete.`;
   const user = `Review these emails against these businesses: emails=${JSON.stringify(emails.emails)}, businesses=${JSON.stringify(businesses.businesses)}`;
   const text = await callClaude(apiKey, system, user);
-  const clean = text.replace(/```json|```/g, "").trim();
-  return JSON.parse(clean);
+  return parseJsonLoose(text);
 }
 
 async function runPersonaEval(apiKey, emails) {
@@ -80,8 +113,7 @@ async function runPersonaEval(apiKey, emails) {
 Score: 5=would definitely respond, 4=would likely respond, 3=might respond, 2=probably ignore, 1=definitely ignore. Improvement: one specific, actionable suggestion.`;
   const user = `Score these sponsorship emails from a local business owner's perspective: ${JSON.stringify(emails.emails)}`;
   const text = await callClaude(apiKey, system, user);
-  const clean = text.replace(/```json|```/g, "").trim();
-  return JSON.parse(clean);
+  return parseJsonLoose(text);
 }
 
 function ScoreDots({ score }) {
