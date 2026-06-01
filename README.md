@@ -113,8 +113,11 @@ I still need to give feedback on another iteration. As of now, each response is 
 
 ### Session 1 — Problem Definition & Architecture
 **Tool:** Claude.ai
+
 **Key prompt:** *I'm building a project for AI 502. I'm the fundraising chair for a club soccer team. I need to find and email 30–100 local businesses for golf outing sponsorships. Help me design an agentic pipeline referencing the workflow implementation doc*
+
 **Output:** 6-agent architecture, PRD, copilot-instructions.md, evaluation criteria
+
 **Decision made:** Short email intro + PDF attachment approach instead of full letter in email body
 
 ### Session 2 — Deployment
