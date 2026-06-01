@@ -13,6 +13,10 @@ fundraiser in the form of an alumni golf outing each year. It is now up to the p
 
 **Live demo:** [[link here](https://prospect-pal-gr.lovable.app/)]
 
+This repository was created fresh after realizing I would be switching to a lovable approach for deployment, since it is cleaner/easier to create a new repository than to merge with an existing one.
+old commits can be found at [[my original repository](https://github.com/Ben-Grob/AI502-Project-Two)] for this project.
+
+
 ---
 
 ## Problem
