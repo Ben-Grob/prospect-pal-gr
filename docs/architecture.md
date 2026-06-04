@@ -5,7 +5,7 @@
 
 ## 1. Mission
 
-This system automates the sponsorship prospecting and outreach process for the GVSU Men's Club Soccer Golf Outing. It finds local businesses in the Grand Rapids / Allendale, MI area, researches contacts, and drafts personalized sponsorship emails—all in under 3 minutes per search.
+This system automates the sponsorship prospecting and outreach process for the GVSU Men's Club Soccer Golf Outing. It finds local businesses in the Grand Rapids / Allendale, MI area, researches contacts, and generates personalized sponsorship emails.
 
 **Users:** Ben Grob (Fundraising Chair), Nick Doletzki (President), future fundraising chairs  
 **Success metric:** A user enters a business category, and within 2 minutes receives 10–20 real, researched businesses with ready-to-send personalized sponsorship emails that pass quality review.
@@ -16,16 +16,15 @@ This system automates the sponsorship prospecting and outreach process for the G
 
 | Layer | Tool | Reason |
 |---|---|---|
-| Frontend | React + Tailwind (Lovable or Artifact) | Fast to build, easy to deploy |
-| Agent Runtime | Gemini 2.0 Flash API (Google AI Studio) | Free tier, no credit card required |
-| Orchestration model | Gemini 2.0 Flash | Handles planning and delegation |
-| Specialist agents | Gemini 2.0 Flash | Prospecting, research, copywriting |
-| Review agents | Gemini 2.0 Flash (low temp) | Cheap, deterministic checking |
-| Web search | Gemini grounding / web search tool | Real business discovery at runtime |
-| Hosting | Lovable (auto-deploy) or GitHub Pages | Instructor-accessible demo URL |
+| Frontend | React + Tailwind (Lovable) | Fast to build, easy to deploy |
+| Agent Runtime | Anthropic Claude API | Cost-efficient, good reasoning, $5 credits available |
+| Production models | Claude 3.5 Sonnet | Balances quality and speed for agent tasks |
+| Development (fast iteration) | Claude 3.5 Haiku | Faster responses for local testing, lower cost |
+| Web search | Anthropic web search integration (Claude) | Real business discovery at runtime |
+| Hosting | Lovable (auto-deploy) | Instructor-accessible demo URL |
 | API keys | Environment variables only — never in code | Security |
 
-> **Multi-model note (satisfies syllabus requirement):** The Orchestrator prompt is also run against Claude Sonnet in evaluation to compare output quality across providers. Results are documented in `evaluation.md`.
+> **Model note:** GitHub Copilot models are not accessible via API. Using Anthropic Claude API exclusively (Haiku for dev, Sonnet for prod). If future evaluation requires multi-model comparison, can add OpenAI or other providers as secondary evaluators.
 
 ---
 
@@ -38,7 +37,7 @@ USER INPUT
         │
         ▼
 ┌─────────────────────────────────┐
-│         ORCHESTRATOR            │  ← Gemini Flash, high reasoning temp
+│         ORCHESTRATOR            │  ← Claude 3.5 Sonnet, temp=0.7
 │  Reads: prd.md, personas.md,    │
 │  domain-primer.md, checklist    │
 │  Plans task breakdown           │
@@ -52,7 +51,8 @@ USER INPUT
      ▼                                               ▼
 ┌──────────────────┐                   ┌────────────────────────┐
 │ PROSPECTOR AGENT │                   │   RESEARCHER AGENT     │
-│ (Gemini + web    │  ──prospect list─▶│ (Gemini + web search)  │
+│ (Claude 3.5      │  ──prospect list─▶│ (Claude 3.5 Sonnet     │
+│  Sonnet + web    │                   │  + web search)         │
 │  search)         │                   │                        │
 │                  │                   │ For each business:     │
 │ Searches:        │                   │ - Owner/contact name   │
@@ -68,7 +68,7 @@ USER INPUT
                                                   ▼
                                     ┌─────────────────────────┐
                                     │    COPYWRITER AGENT     │
-                                    │    (Gemini Flash)       │
+                                    │    (Claude 3.5 Sonnet)  │
                                     │                         │
                                     │ Reads: enriched prospect│
                                     │ data (name, type, owner)│
@@ -91,7 +91,8 @@ USER INPUT
                                ▼                                   ▼
                  ┌─────────────────────────┐      ┌───────────────────────────┐
                  │    REVIEWER AGENT       │      │  PERSONA EVALUATOR AGENT  │
-                 │  (Gemini Flash, temp=0) │      │  (Gemini Flash)           │
+                 │  (Claude 3.5 Haiku,     │      │  (Claude 3.5 Haiku)       │
+                 │   temp=0, fast)         │      │  (temp=0.5)               │
                  │                         │      │                           │
                  │ Checks each email:      │      │ Reads as the business     │
                  │ ✓ Business name correct?│      │ owner would:              │
@@ -141,9 +142,9 @@ All intermediate data passes as structured JSON between agents. No external data
 ## 5. UX Primitives
 
 Every screen supports the same three actions:
-1. **Search** — enter a category and location to trigger the pipeline
-2. **Review** — read each prospect card with drafted email
-3. **Export** — copy email to clipboard or download the full list as CSV
+1. **Search** — category + location input triggers the agent pipeline
+2. **Review** — read prospect cards with drafted emails, reviewer scores, persona scores
+3. **Export** — copy email to clipboard or download full list as CSV
 
 ---
 
@@ -153,18 +154,22 @@ Full agent `.md` files live in `.agents/`. Summary:
 
 | Agent | Model | Role | Temperature |
 |---|---|---|---|
-| Orchestrator | Gemini Flash | Plans, delegates, assembles, logs | 0.7 |
-| Prospector | Gemini Flash + web | Finds real local businesses | 0.3 |
-| Researcher | Gemini Flash + web | Enriches with contact info | 0.3 |
-| Copywriter | Gemini Flash | Writes short personalized email intro per business | 0.6 |
-| Reviewer | Gemini Flash | Factual QA, flags errors | 0.0 |
-| Persona Evaluator | Gemini Flash | Reads as business owner, scores | 0.5 |
+| Orchestrator | Claude 3.5 Sonnet | Plans, delegates, assembles, logs | 0.7 |
+| Prospector | Claude 3.5 Sonnet + web search | Finds real local businesses | 0.3 |
+| Researcher | Claude 3.5 Sonnet + web search | Enriches with contact info | 0.3 |
+| Copywriter | Claude 3.5 Sonnet | Writes short personalized email intro per business | 0.6 |
+| Reviewer | Claude 3.5 Haiku | Factual QA, flags errors (fast, cheaper) | 0.0 |
+| Persona Evaluator | Claude 3.5 Haiku | Reads as business owner, scores (cheaper) | 0.5 |
+
+**Rationale:**
+- **Sonnet for complex tasks** (Orchestrator, Prospector, Researcher, Copywriter): Better reasoning, planning, and multi-step task handling
+- **Haiku for QA/scoring** (Reviewer, Persona Evaluator): Deterministic tasks, lower cost, fast enough for feedback
 
 ---
 
 ## 7. Email + PDF Approach
 
-The Copywriter Agent produces a **short, warm intro email** (4–6 lines) rather than a full letter. The existing PDF sponsorship packet (`ClubSoccerLetterTemplate.pdf`) is attached by the user when they send.
+The Copywriter Agent produces a **short, warm intro email** (4–6 lines) rather than a full letter. The existing PDF sponsorship packet (`ClubSoccerLetterTemplate.pdf`) is attached by the user when sending.
 
 **Email structure:**
 1. Personal greeting using owner name if found
@@ -195,24 +200,44 @@ Defined fully in `evaluation.md`. In brief:
 
 ## 9. Deployment
 
-- **Dev:** React app running locally, API key in `.env`
+- **Dev:** React app running locally, Claude API key in `.env`
 - **Production:** Deploy to Lovable for a public URL the instructor can demo
 - **Repository:** GitHub, with `README.md`, this file, and all agent `.md` files committed
 
 ---
 
-## 10. Project File Structure
+## 10. Model & Cost Assumptions
+
+**Credit allocation ($5 Anthropic credits):**
+- **Development:** Claude 3.5 Haiku (fast iteration, lower cost)
+- **Production pipeline:** Claude 3.5 Sonnet (better reasoning + consistency)
+- **Reviewer & Persona Eval:** Claude 3.5 Haiku (deterministic tasks, cost optimization)
+
+**Estimated usage per run (10–20 prospects):**
+- Prospector: ~2,000 input + 1,500 output tokens (Sonnet) = $0.035 per run
+- Researcher: ~3,000 input + 2,000 output tokens (Sonnet) = $0.050 per run
+- Copywriter: ~2,500 input + 1,000 output tokens (Sonnet) = $0.038 per run
+- Reviewer: ~1,500 input + 800 output tokens (Haiku) = $0.006 per run
+- Persona Eval: ~1,500 input + 800 output tokens (Haiku) = $0.006 per run
+- Orchestrator: ~500 input + 300 output tokens (Sonnet) = $0.009 per run
+
+**Total per run: ~$0.14.** $5 credits = ~35 full pipeline runs before running out.
+
+---
+
+## 11. Project File Structure
 
 ```
-sponsor-outreach-agent/
+prospect-pal-gr/
 ├── README.md
-├── architecture.md          ← this file
-├── prd.md
-├── personas.md
-├── domain-primer.md
-├── evaluation.md
-├── development-checklist.md
-├── feedback-log.md
+├── docs/
+│   ├── architecture.md          ← this file
+│   ├── prd.md
+│   ├── personas.md
+│   ├── domain-primer.md
+│   ├── evaluation.md
+│   ├── development-checklist.md
+│   └── feedback-log.md
 ├── .agents/
 │   ├── orchestrator.md
 │   ├── prospector.md
@@ -225,8 +250,10 @@ sponsor-outreach-agent/
 │   ├── contact-research.md
 │   └── email-personalization.md
 ├── src/
-│   ├── app.tsx              ← React frontend
+│   ├── components/
+│   │   └── SponsorOutreachAgent.tsx
 │   ├── agents/              ← agent runner functions
-│   └── prompts/             ← prompt library (never inline)
+│   ├── prompts/             ← prompt library (never inline)
+│   └── ...
 └── .env.example             ← API key template, never committed
 ```
