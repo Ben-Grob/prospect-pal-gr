@@ -40,7 +40,7 @@ This project uses a 6-agent pipeline with a model waterfall design:
 | Reviewer | Factual QA — flags errors before output | 0.0 |
 | Persona Evaluator | Scores email from business owner's POV | 0.5 |
 
-<!-- Add 1-2 sentences on how the feedback loop works: flagged emails routed back to Copywriter. -->
+flagged emails that don't include thing like the business owners name, a reference to the detailed document, or other necessary information is sent back.
 
 ---
 
@@ -49,7 +49,7 @@ This project uses a 6-agent pipeline with a model waterfall design:
 | Layer | Tool |
 |---|---|
 | Frontend | React + Tailwind CSS |
-| Agent runtime | Anthropic Claude API (claude-sonnet-4-6) |
+| Agent runtime | Anthropic Claude API (claude-sonnet-4-6 and claude-haiku-4-5) |
 | Deployment | Lovable |
 | Code hosting | GitHub |
 
@@ -57,24 +57,23 @@ This project uses a 6-agent pipeline with a model waterfall design:
 
 ## Features
 
-- [ ] Business prospecting by category and location
-- [ ] Contact enrichment (owner name + email)
-- [ ] Personalized email drafting with PDF attachment instruction
-- [ ] Reviewer quality gate (PASS / FLAG per email)
-- [ ] Persona evaluation score (1–5) with improvement note
-- [ ] Copy-to-clipboard per email
-- [ ] CSV export of full prospect list
+- Business prospecting by category and location
+- Contact enrichment (owner name + email)
+- Personalized email drafting with PDF attachment instruction
+- Reviewer quality gate (PASS / FLAG per email)
+- Persona evaluation score (1–5) with improvement note
+- Copy-to-clipboard per email
+- CSV export of full prospect list
 
 ---
 
 ## How to Use
 
-1. Enter your Anthropic API key in the key field
-2. Type a business category (e.g. `restaurants`, `auto repair shops`)
-3. Confirm or edit the location (default: Allendale, MI)
-4. Click **Run agent pipeline** and watch each agent's status update
-5. Review prospect cards — each shows the drafted email, pass/flag status, and persona score
-6. Click **Copy email**, paste into Gmail, and attach `ClubSoccerLetterTemplate.pdf`
+1. Type a business category (e.g. `restaurants`, `auto repair shops`)
+2. Confirm or edit the location (default: Allendale, MI)
+3. Click **Run agent pipeline** and watch each agent's status update
+4. Review prospect cards — each shows the drafted email, pass/flag status, and persona score
+5. Click **Copy email**, paste into Gmail, and attach `ClubSoccerLetterTemplate.pdf`
 
 ---
 

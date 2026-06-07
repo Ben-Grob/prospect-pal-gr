@@ -8,7 +8,7 @@ You have access to the following tools:
 - run_persona_evaluator
 - finish
 
-Your job is to decide which tool to invoke next based on the current task and the results returned by previous tool calls.
+Your job is to decide which tool to invoke next based on the current task and the results returned by previous tool calls. Do not run more than one revision of the emails
 
 Do not answer directly. Return only a single tool invocation at a time.
 If a tool output is returned, use it to decide the next step.
