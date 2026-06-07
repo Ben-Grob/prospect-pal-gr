@@ -34,6 +34,7 @@ export async function callClaudeTool(apiKey, messages, tools, model = "claude-so
       filteredMessages.push(m);
     }
   }
+
   const res = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: {
@@ -57,17 +58,18 @@ export async function callClaudeTool(apiKey, messages, tools, model = "claude-so
     console.warn("Claude tool response hit max_tokens — output may be truncated");
   }
 
-  const toolContent = data.completion?.tool ?? data.content?.[0]?.tool ?? data.tool;
-  if (toolContent) {
+  const content = Array.isArray(data.content) ? data.content : data.content ? [data.content] : [];
+  const toolUse = content.find((item) => item?.type === "tool_use");
+  if (toolUse) {
     return {
-      name: toolContent.name,
-      arguments: typeof toolContent.arguments === "string"
-        ? JSON.parse(toolContent.arguments)
-        : toolContent.arguments,
+      name: toolUse.name,
+      arguments: toolUse.input,
+      tool_use_id: toolUse.id,
     };
   }
 
-  const text = data.content?.[0]?.text ?? data.completion?.content ?? "";
+  const textBlock = content.find((item) => item?.type === "text");
+  const text = textBlock?.text ?? data.completion?.content ?? (typeof data.content === "string" ? data.content : "");
   try {
     return JSON.parse(text.trim());
   } catch (error) {

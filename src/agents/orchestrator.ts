@@ -11,6 +11,7 @@ const tools = [
   {
     name: "run_prospector",
     description: "Find local businesses for the chosen category and location.",
+    type: "custom",
     input_schema: {
       type: "object",
       properties: {
@@ -23,6 +24,7 @@ const tools = [
   {
     name: "run_researcher",
     description: "Enrich a business list with contact details.",
+    type: "custom",
     input_schema: {
       type: "object",
       properties: {
@@ -35,6 +37,7 @@ const tools = [
   {
     name: "run_copywriter",
     description: "Draft or revise personalized outreach emails for the business list.",
+    type: "custom",
     input_schema: {
       type: "object",
       properties: {
@@ -47,6 +50,7 @@ const tools = [
   {
     name: "run_reviewer",
     description: "Review drafted emails and flag issues.",
+    type: "custom",
     input_schema: {
       type: "object",
       properties: {
@@ -59,6 +63,7 @@ const tools = [
   {
     name: "run_persona_evaluator",
     description: "Score emails from the perspective of a local business owner.",
+    type: "custom",
     input_schema: {
       type: "object",
       properties: {
@@ -70,6 +75,7 @@ const tools = [
   {
     name: "finish",
     description: "Indicates the pipeline is complete and the host should assemble final results.",
+    type: "custom",
     input_schema: {
       type: "object",
       properties: {
@@ -106,63 +112,72 @@ export async function runOrchestrator(apiKey, category, location, setStatus) {
       break;
     }
 
+    const toolUseId = toolCall.tool_use_id ?? `toolu_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+    messages.push({
+      role: "assistant",
+      content: [
+        {
+          type: "tool_use",
+          id: toolUseId,
+          name: toolCall.name,
+          input: toolCall.arguments,
+          caller: { type: "direct" },
+        },
+      ],
+    });
+
+    let toolResult;
     if (toolCall.name === "run_prospector") {
       setStatus?.("prospector", "running");
       prospects = await runProspector(apiKey, toolCall.arguments.category, toolCall.arguments.location);
       setStatus?.("prospector", "done");
-      messages.push({ role: "tool", name: "run_prospector", content: JSON.stringify(prospects) });
-      continue;
-    }
-
-    if (toolCall.name === "run_researcher") {
+      toolResult = prospects;
+    } else if (toolCall.name === "run_researcher") {
       setStatus?.("researcher", "running");
       enriched = await runResearcher(apiKey, toolCall.arguments.businesses, toolCall.arguments.location);
       setStatus?.("researcher", "done");
-      messages.push({ role: "tool", name: "run_researcher", content: JSON.stringify(enriched) });
-      continue;
-    }
-
-    if (toolCall.name === "run_copywriter") {
+      toolResult = enriched;
+    } else if (toolCall.name === "run_copywriter") {
       setStatus?.("copywriter", "running");
       const revisionFor = toolCall.arguments.revision_for ?? null;
       emails = await runCopywriter(apiKey, toolCall.arguments.businesses, revisionFor);
       setStatus?.("copywriter", "done");
-      messages.push({ role: "tool", name: "run_copywriter", content: JSON.stringify(emails) });
-      continue;
-    }
-
-    if (toolCall.name === "run_reviewer") {
+      toolResult = emails;
+    } else if (toolCall.name === "run_reviewer") {
       setStatus?.("reviewer", "running");
       reviews = await runReviewer(apiKey, toolCall.arguments.emails, toolCall.arguments.businesses);
       setStatus?.("reviewer", "done");
-      messages.push({ role: "tool", name: "run_reviewer", content: JSON.stringify(reviews) });
-
-      const flagged = reviews?.reviews?.filter((r) => r.status === "FLAG").map((r) => r.business_name) || [];
-      if (flagged.length && revisionCount < 1) {
-        revisionCount += 1;
-        messages.push({ role: "system", content: "There are flagged emails. Please revise only the flagged emails on the next run_copywriter call." });
-        const reviseCall = {
-          name: "run_copywriter",
-          arguments: {
-            businesses: toolCall.arguments.businesses,
-            revision_for: flagged,
-          },
-        };
-        messages.push({ role: "assistant", content: JSON.stringify(reviseCall) });
-        continue;
-      }
-      continue;
-    }
-
-    if (toolCall.name === "run_persona_evaluator") {
+      toolResult = reviews;
+    } else if (toolCall.name === "run_persona_evaluator") {
       setStatus?.("persona", "running");
       evaluations = await runPersonaEvaluator(apiKey, toolCall.arguments.emails);
       setStatus?.("persona", "done");
-      messages.push({ role: "tool", name: "run_persona_evaluator", content: JSON.stringify(evaluations) });
-      continue;
+      toolResult = evaluations;
+    } else {
+      throw new Error(`Unknown orchestrator tool: ${toolCall.name}`);
     }
 
-    throw new Error(`Unknown orchestrator tool: ${toolCall.name}`);
+    messages.push({
+      role: "user",
+      content: [
+        {
+          type: "tool_result",
+          tool_use_id: toolUseId,
+          content: typeof toolResult === "string" ? toolResult : JSON.stringify(toolResult),
+        },
+      ],
+    });
+
+    if (toolCall.name === "run_reviewer") {
+      const flagged = reviews?.reviews?.filter((r) => r.status === "FLAG").map((r) => r.business_name) || [];
+      if (flagged.length && revisionCount < 1) {
+        revisionCount += 1;
+        messages.push({
+          role: "user",
+          content: `There are flagged emails for businesses ${JSON.stringify(flagged)}. Please invoke run_copywriter next and revise only those flagged emails using revision_for.`,
+        });
+      }
+    }
   }
 
   const assembled = (emails?.emails ?? []).map((email) => {
