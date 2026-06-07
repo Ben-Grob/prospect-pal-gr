@@ -1,13 +1,8 @@
 // @ts-nocheck
-export async function callClaude(apiKey, systemPrompt, userPrompt, model = "claude-sonnet-4-6") {
-  const res = await fetch("https://api.anthropic.com/v1/messages", {
+export async function callClaude(_apiKey, systemPrompt, userPrompt, model = "claude-sonnet-4-6") {
+  const res = await fetch("/api/claude", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": apiKey,
-      "anthropic-version": "2023-06-01",
-      "anthropic-dangerous-direct-browser-access": "true",
-    },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       model,
       max_tokens: 8000,
@@ -24,7 +19,7 @@ export async function callClaude(apiKey, systemPrompt, userPrompt, model = "clau
   return data.content?.[0]?.text ?? data?.completion?.content ?? "";
 }
 
-export async function callClaudeTool(apiKey, messages, tools, model = "claude-sonnet-4-6") {
+export async function callClaudeTool(_apiKey, messages, tools, model = "claude-sonnet-4-6") {
   let system;
   const filteredMessages = [];
   for (const m of messages) {
@@ -35,14 +30,9 @@ export async function callClaudeTool(apiKey, messages, tools, model = "claude-so
     }
   }
 
-  const res = await fetch("https://api.anthropic.com/v1/messages", {
+  const res = await fetch("/api/claude", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": apiKey,
-      "anthropic-version": "2023-06-01",
-      "anthropic-dangerous-direct-browser-access": "true",
-    },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       model,
       max_tokens: 8000,

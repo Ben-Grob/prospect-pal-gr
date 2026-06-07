@@ -117,7 +117,6 @@ function ProspectCard({ email, review, evaluation, business }) {
 }
 
 export default function App() {
-  const [apiKey, setApiKey] = useState("");
   const [category, setCategory] = useState("");
   const [location, setLocation] = useState("Allendale, MI");
   const [agentStatus, setAgentStatus] = useState({});
@@ -129,7 +128,6 @@ export default function App() {
   const setStatus = (id, status) => setAgentStatus(prev => ({ ...prev, [id]: status }));
 
   const runPipeline = async () => {
-    if (!apiKey.trim()) { setError("Please enter your Anthropic API key."); return; }
     if (!category.trim()) { setError("Please enter a business category."); return; }
     setError(null);
     setResults(null);
@@ -138,7 +136,7 @@ export default function App() {
 
     try {
       setStatus("orchestrator", "running");
-      const assembled = await runOrchestrator(apiKey, category, location, setStatus);
+      const assembled = await runOrchestrator(null, category, location, setStatus);
       setStatus("orchestrator", "done");
       setResults(assembled);
       setTimeout(() => resultsRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
@@ -179,13 +177,6 @@ export default function App() {
         background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)",
         borderRadius: "var(--border-radius-lg)", padding: "1rem 1.25rem", marginBottom: 16,
       }}>
-        <label style={{ fontSize: 13, color: "var(--color-text-secondary)", display: "block", marginBottom: 4 }}>
-          Anthropic API key
-        </label>
-        <input
-          type="password" value={apiKey} onChange={e => setApiKey(e.target.value)}
-          placeholder="sk-ant-..." style={{ width: "100%", marginBottom: 12, fontFamily: "var(--font-mono)", fontSize: 13 }}
-        />
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 12 }}>
           <div>
             <label style={{ fontSize: 13, color: "var(--color-text-secondary)", display: "block", marginBottom: 4 }}>
