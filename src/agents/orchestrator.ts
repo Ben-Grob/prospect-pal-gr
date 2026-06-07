@@ -10,7 +10,7 @@ const tools = [
   {
     name: "run_prospector",
     description: "Find local businesses for the chosen category and location.",
-    parameters: {
+    input_schema: {
       type: "object",
       properties: {
         category: { type: "string" },
@@ -22,7 +22,7 @@ const tools = [
   {
     name: "run_researcher",
     description: "Enrich a business list with contact details.",
-    parameters: {
+    input_schema: {
       type: "object",
       properties: {
         businesses: { type: "array", items: { type: "object" } },
@@ -34,7 +34,7 @@ const tools = [
   {
     name: "run_copywriter",
     description: "Draft or revise personalized outreach emails for the business list.",
-    parameters: {
+    input_schema: {
       type: "object",
       properties: {
         businesses: { type: "array", items: { type: "object" } },
@@ -46,7 +46,7 @@ const tools = [
   {
     name: "run_reviewer",
     description: "Review drafted emails and flag issues.",
-    parameters: {
+    input_schema: {
       type: "object",
       properties: {
         emails: { type: "array", items: { type: "object" } },
@@ -58,7 +58,7 @@ const tools = [
   {
     name: "run_persona_evaluator",
     description: "Score emails from the perspective of a local business owner.",
-    parameters: {
+    input_schema: {
       type: "object",
       properties: {
         emails: { type: "array", items: { type: "object" } },
@@ -69,7 +69,7 @@ const tools = [
   {
     name: "finish",
     description: "Indicates the pipeline is complete and the host should assemble final results.",
-    parameters: {
+    input_schema: {
       type: "object",
       properties: {
         note: { type: "string" },
