@@ -1,17 +1,6 @@
 // @ts-nocheck
 import { useState, useRef } from "react";
-import prospector_system from "../prompts/prospector_system.txt?raw";
-import prospector_user_tpl from "../prompts/prospector_user.txt?raw";
-import researcher_system from "../prompts/researcher_system.txt?raw";
-import researcher_user_tpl from "../prompts/researcher_user.txt?raw";
-import copywriter_system_tpl from "../prompts/copywriter_system.txt?raw";
-import copywriter_user_tpl from "../prompts/copywriter_user.txt?raw";
-import reviewer_system from "../prompts/reviewer_system.txt?raw";
-import reviewer_user_tpl from "../prompts/reviewer_user.txt?raw";
-import persona_system from "../prompts/persona_system.txt?raw";
-import persona_user_tpl from "../prompts/persona_user.txt?raw";
-
-const LETTER_TEMPLATE = `We are the GVSU Men's Club Soccer Team. We are coming off a strong season, losing only one conference game and competing in the regional tournament. As a self-funded program, our players balance academics, athletics, and financial demands. Our team attracts 100+ attendees at our annual golf outing, 50-100+ spectators per home game, and 150+ fans at our Senior Night. Our social media reach extends to 1,000+ local supporters, alumni, and families. Sponsorship tiers range from $175 (Golf Hole Sponsor) to $799 (Elite Sponsor with fence banner, jersey logo, and social media shoutout). Contact: Ben Grob (grobb@mail.gvsu.edu, 248-534-2498) and Nick Doletzki (doletzkn@mail.gvsu.edu, 734-417-3129). Golf outing: https://gvsu-club-soccer-golf-outing.perfectgolfevent.com/ Instagram: @gvsumensclubsoccer Donation: https://www.gvsu.edu/giving/give-now-752.htm`;
+import { runOrchestrator } from "@/agents/orchestrator";
 
 const AGENT_STEPS = [
   { id: "prospector", label: "Prospector", icon: "ti-search", desc: "Finding local businesses..." },
@@ -21,99 +10,6 @@ const AGENT_STEPS = [
   { id: "persona", label: "Persona Evaluator", icon: "ti-mood-smile", desc: "Scoring from owner's POV..." },
   { id: "orchestrator", label: "Orchestrator", icon: "ti-cpu", desc: "Assembling final output..." },
 ];
-
-async function callClaude(apiKey, systemPrompt, userPrompt) {
-  const res = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": apiKey,
-      "anthropic-version": "2023-06-01",
-      "anthropic-dangerous-direct-browser-access": "true",
-    },
-    body: JSON.stringify({
-      model: "claude-sonnet-4-5",
-      max_tokens: 8000,
-      system: systemPrompt,
-      messages: [{ role: "user", content: userPrompt }],
-    }),
-  });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.error?.message || "API error");
-  if (data.stop_reason === "max_tokens") {
-    console.warn("Claude response hit max_tokens — output may be truncated");
-  }
-  return data.content[0].text;
-}
-
-function parseJsonLoose(text) {
-  let s = text.replace(/```json|```/gi, "").trim();
-  const start = s.search(/[\{\[]/);
-  if (start === -1) throw new Error("No JSON found in response");
-  s = s.slice(start);
-  try { return JSON.parse(s); } catch {}
-  // Attempt repair: strip control chars, close unterminated string, then close open brackets/braces.
-  let repaired = s.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, "");
-  // Walk to find structural state
-  let inStr = false, esc = false;
-  const stack = [];
-  for (let i = 0; i < repaired.length; i++) {
-    const c = repaired[i];
-    if (inStr) {
-      if (esc) { esc = false; continue; }
-      if (c === "\\") { esc = true; continue; }
-      if (c === '"') inStr = false;
-      continue;
-    }
-    if (c === '"') inStr = true;
-    else if (c === "{" || c === "[") stack.push(c);
-    else if (c === "}" || c === "]") stack.pop();
-  }
-  if (inStr) repaired += '"';
-  // Remove trailing commas/partial tokens before closing
-  repaired = repaired.replace(/,\s*$/, "").replace(/:\s*$/, ": null");
-  while (stack.length) {
-    const open = stack.pop();
-    repaired += open === "{" ? "}" : "]";
-  }
-  repaired = repaired.replace(/,(\s*[}\]])/g, "$1");
-  return JSON.parse(repaired);
-}
-
-async function runProspector(apiKey, category, location) {
-  const system = prospector_system;
-  const user = prospector_user_tpl.replace('{category}', category).replace('{location}', location);
-  const text = await callClaude(apiKey, system, user);
-  return parseJsonLoose(text);
-}
-
-async function runResearcher(apiKey, businesses, location) {
-  const system = researcher_system;
-  const user = researcher_user_tpl.replace('{location}', location).replace('{businesses}', JSON.stringify(businesses.businesses));
-  const text = await callClaude(apiKey, system, user);
-  return parseJsonLoose(text);
-}
-
-async function runCopywriter(apiKey, businesses) {
-  const system = copywriter_system_tpl.replace('{LETTER_TEMPLATE}', LETTER_TEMPLATE);
-  const user = copywriter_user_tpl.replace('{businesses}', JSON.stringify(businesses.businesses));
-  const text = await callClaude(apiKey, system, user);
-  return parseJsonLoose(text);
-}
-
-async function runReviewer(apiKey, emails, businesses) {
-  const system = reviewer_system;
-  const user = reviewer_user_tpl.replace('{emails}', JSON.stringify(emails.emails)).replace('{businesses}', JSON.stringify(businesses.businesses));
-  const text = await callClaude(apiKey, system, user);
-  return parseJsonLoose(text);
-}
-
-async function runPersonaEval(apiKey, emails) {
-  const system = persona_system;
-  const user = persona_user_tpl.replace('{emails}', JSON.stringify(emails.emails));
-  const text = await callClaude(apiKey, system, user);
-  return parseJsonLoose(text);
-}
 
 function ScoreDots({ score }) {
   return (
@@ -241,33 +137,8 @@ export default function App() {
     setRunning(true);
 
     try {
-      setStatus("prospector", "running");
-      const prospects = await runProspector(apiKey, category, location);
-      setStatus("prospector", "done");
-
-      setStatus("researcher", "running");
-      const enriched = await runResearcher(apiKey, prospects, location);
-      setStatus("researcher", "done");
-
-      setStatus("copywriter", "running");
-      const emails = await runCopywriter(apiKey, enriched);
-      setStatus("copywriter", "done");
-
-      setStatus("reviewer", "running");
-      const reviews = await runReviewer(apiKey, emails, enriched);
-      setStatus("reviewer", "done");
-
-      setStatus("persona", "running");
-      const evals = await runPersonaEval(apiKey, emails);
-      setStatus("persona", "done");
-
       setStatus("orchestrator", "running");
-      const assembled = emails.emails.map(email => {
-        const biz = enriched.businesses.find(b => b.name === email.business_name) || {};
-        const review = reviews.reviews.find(r => r.business_name === email.business_name) || {};
-        const evaluation = evals.evaluations.find(e => e.business_name === email.business_name) || {};
-        return { email, business: biz, review, evaluation };
-      });
+      const assembled = await runOrchestrator(apiKey, category, location, setStatus);
       setStatus("orchestrator", "done");
       setResults(assembled);
       setTimeout(() => resultsRef.current?.scrollIntoView({ behavior: "smooth" }), 100);

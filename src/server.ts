@@ -37,9 +37,30 @@ async function normalizeCatastrophicSsrResponse(response: Response): Promise<Res
   });
 }
 
+import { searchBraveWeb } from "./tools/searchWeb.js";
+
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
     try {
+      const url = new URL(request.url);
+      if (url.pathname === "/api/search" && request.method === "POST") {
+        const body = await request.json();
+        const query = body.query;
+        const size = typeof body.size === "number" ? body.size : 6;
+        const apiKey = process.env.BRAVE_SEARCH_API_KEY || (env as any)?.BRAVE_SEARCH_API_KEY;
+        if (!apiKey) {
+          return new Response(JSON.stringify({ error: "Missing BRAVE_SEARCH_API_KEY" }), {
+            status: 500,
+            headers: { "content-type": "application/json" },
+          });
+        }
+        const results = await searchBraveWeb(query, apiKey, size);
+        return new Response(JSON.stringify({ results }), {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        });
+      }
+
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);
       return await normalizeCatastrophicSsrResponse(response);

@@ -1,1 +1,2 @@
-Find local {category} businesses near {location} that might sponsor a college golf outing. Return realistic business names typical of that area.
+Find local {category} businesses near {location} that might sponsor a college golf outing. Use these Brave search results to identify real local prospects:
+{searchResults}
