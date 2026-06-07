@@ -5,7 +5,7 @@ import { callClaude, parseJsonLoose } from "./common";
 
 export async function runResearcher(apiKey, businesses, location) {
   const businessSearchResults = [];
-  for (const business of businesses.businesses) {
+  for (const business of businesses) {
     const response = await fetch("/api/search", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -17,7 +17,7 @@ export async function runResearcher(apiKey, businesses, location) {
 
   const user = researcher_user_tpl
     .replace("{location}", location)
-    .replace("{businesses}", JSON.stringify(businesses.businesses, null, 2))
+    .replace("{businesses}", JSON.stringify(businesses, null, 2))
     .replace("{businessSearchResults}", JSON.stringify(businessSearchResults, null, 2));
 
   const text = await callClaude(apiKey, researcher_system, user, "claude-sonnet-4-6");

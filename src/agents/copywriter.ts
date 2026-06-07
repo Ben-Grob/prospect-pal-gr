@@ -7,7 +7,7 @@ const LETTER_TEMPLATE = `We are the GVSU Men's Club Soccer Team. We are coming o
 
 export async function runCopywriter(apiKey, businesses, revisionFor = null) {
   const system = copywriter_system_tpl.replace("{LETTER_TEMPLATE}", LETTER_TEMPLATE);
-  let user = copywriter_user_tpl.replace("{businesses}", JSON.stringify(businesses.businesses, null, 2));
+  let user = copywriter_user_tpl.replace("{businesses}", JSON.stringify(businesses, null, 2));
   if (revisionFor && revisionFor.length) {
     user += `\n\nRevise the following businesses: ${JSON.stringify(revisionFor)}`;
   }

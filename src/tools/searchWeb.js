@@ -1,9 +1,9 @@
-export async function searchBraveWeb(query, apiKey, size = 6) {
-  const params = new URLSearchParams({ source: "web", q: query, size: String(size) });
-  const res = await fetch(`https://api.search.brave.com/res/v1/web?${params.toString()}`, {
+export async function searchBraveWeb(query, apiKey, count = 6) {
+  const params = new URLSearchParams({ q: query, count: String(count) });
+  const res = await fetch(`https://api.search.brave.com/res/v1/web/search?${params.toString()}`, {
     headers: {
-      "X-API-Key": apiKey,
-      Accept: "application/json",
+      "X-Subscription-Token": apiKey,
+      "Accept": "application/json",
     },
   });
 
@@ -13,11 +13,15 @@ export async function searchBraveWeb(query, apiKey, size = 6) {
   }
 
   const data = await res.json();
-  const results = (data?.web?.results ?? []).map((item) => ({
+
+  if (import.meta.env.DEV) {
+    console.log(`[Brave] ${data?.web?.results?.length ?? 0} results for "${query}"`);
+  }
+
+  return (data?.web?.results ?? []).map((item) => ({
     title: item.title,
-    snippet: item.snippet,
+    snippet: item.description ?? item.snippet,
     url: item.url,
     source: item.source,
   }));
-  return results;
 }
