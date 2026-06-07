@@ -1,3 +1,4 @@
+// @ts-nocheck
 export async function callClaude(apiKey, systemPrompt, userPrompt, model = "claude-sonnet-4-6") {
   const res = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",

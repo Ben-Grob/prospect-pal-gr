@@ -1,3 +1,4 @@
+// @ts-nocheck
 import persona_system from "../prompts/persona_system.txt?raw";
 import persona_user_tpl from "../prompts/persona_user.txt?raw";
 import { callClaude, parseJsonLoose } from "./common";

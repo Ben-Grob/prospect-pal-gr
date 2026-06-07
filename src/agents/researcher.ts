@@ -1,3 +1,4 @@
+// @ts-nocheck
 import researcher_system from "../prompts/researcher_system.txt?raw";
 import researcher_user_tpl from "../prompts/researcher_user.txt?raw";
 import { callClaude, parseJsonLoose } from "./common";

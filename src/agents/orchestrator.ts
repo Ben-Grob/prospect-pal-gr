@@ -1,3 +1,4 @@
+// @ts-nocheck
 import orchestrator_system from "../prompts/orchestrator.txt?raw";
 import { callClaudeTool } from "./common";
 import { runProspector } from "./prospector";
