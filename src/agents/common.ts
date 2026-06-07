@@ -24,6 +24,15 @@ export async function callClaude(apiKey, systemPrompt, userPrompt, model = "clau
 }
 
 export async function callClaudeTool(apiKey, messages, tools, model = "claude-sonnet-4-6") {
+  let system;
+  const filteredMessages = [];
+  for (const m of messages) {
+    if (m.role === "system") {
+      system = system ? system + "\n\n" + m.content : m.content;
+    } else {
+      filteredMessages.push(m);
+    }
+  }
   const res = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: {
@@ -35,7 +44,8 @@ export async function callClaudeTool(apiKey, messages, tools, model = "claude-so
     body: JSON.stringify({
       model,
       max_tokens: 8000,
-      messages,
+      ...(system ? { system } : {}),
+      messages: filteredMessages,
       tools,
     }),
   });
