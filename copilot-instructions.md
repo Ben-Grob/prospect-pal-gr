@@ -29,11 +29,11 @@ Everything you build must serve this real-world user. Not technical impressivene
 ## 3. Tech Stack
 
 - **Frontend:** React + Tailwind CSS
-- **Backend / Agent runtime:** Gemini 2.0 Flash API (Google AI Studio, free tier)
-- **Web search:** Gemini grounding / web search tool
+- **Backend / Agent runtime:** Claude api: Haiku and Sonnet models
+- **Web search:** Brave grounding / web search tool
 - **Hosting:** Lovable (production) / localhost (dev)
 - **Dev servers:** Frontend on localhost:3000
-- **API keys:** `GEMINI_API_KEY` in `.env` (never committed)
+- **API keys:** `CLAUDE_API_KEY` and `BRAVE_API_KEY` in `.env` (never committed)
 
 ---
 

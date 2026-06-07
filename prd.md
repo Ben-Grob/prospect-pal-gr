@@ -16,7 +16,7 @@ The GVSU Men's Club Soccer team is a self-funded program. Each year, the fundrai
 5. Edit a template letter 10+ times, once per business
 6. Send emails one at a time
 
-This process takes **15–20 hours** to generate 20 quality leads.
+This process takes **8-10 hours** to generate 20 quality leads.
 
 **Pain point (direct):** "I don't know where to send them." — Fundraising Chair, on having a letter template but no prospect list.
 

@@ -1,5 +1,15 @@
 // @ts-nocheck
 import { useState, useRef } from "react";
+import prospector_system from "../prompts/prospector_system.txt?raw";
+import prospector_user_tpl from "../prompts/prospector_user.txt?raw";
+import researcher_system from "../prompts/researcher_system.txt?raw";
+import researcher_user_tpl from "../prompts/researcher_user.txt?raw";
+import copywriter_system_tpl from "../prompts/copywriter_system.txt?raw";
+import copywriter_user_tpl from "../prompts/copywriter_user.txt?raw";
+import reviewer_system from "../prompts/reviewer_system.txt?raw";
+import reviewer_user_tpl from "../prompts/reviewer_user.txt?raw";
+import persona_system from "../prompts/persona_system.txt?raw";
+import persona_user_tpl from "../prompts/persona_user.txt?raw";
 
 const LETTER_TEMPLATE = `We are the GVSU Men's Club Soccer Team. We are coming off a strong season, losing only one conference game and competing in the regional tournament. As a self-funded program, our players balance academics, athletics, and financial demands. Our team attracts 100+ attendees at our annual golf outing, 50-100+ spectators per home game, and 150+ fans at our Senior Night. Our social media reach extends to 1,000+ local supporters, alumni, and families. Sponsorship tiers range from $175 (Golf Hole Sponsor) to $799 (Elite Sponsor with fence banner, jersey logo, and social media shoutout). Contact: Ben Grob (grobb@mail.gvsu.edu, 248-534-2498) and Nick Doletzki (doletzkn@mail.gvsu.edu, 734-417-3129). Golf outing: https://gvsu-club-soccer-golf-outing.perfectgolfevent.com/ Instagram: @gvsumensclubsoccer Donation: https://www.gvsu.edu/giving/give-now-752.htm`;
 
@@ -71,47 +81,36 @@ function parseJsonLoose(text) {
 }
 
 async function runProspector(apiKey, category, location) {
-  const system = `You are a business prospector finding LOCAL businesses (no national chains) for a college soccer team seeking golf outing sponsors. Return ONLY valid JSON, no markdown, no explanation. Format exactly:
-{"businesses":[{"name":"string","type":"string","address":"string","size_signal":"micro|small|established|regional"}]}
-Return 8-12 realistic local businesses. size_signal: micro=solo/tiny, small=single location, established=well-known local, regional=multi-location.`;
-  const user = `Find local ${category} businesses near ${location} that might sponsor a college golf outing. Return realistic business names typical of that area.`;
+  const system = prospector_system;
+  const user = prospector_user_tpl.replace('{category}', category).replace('{location}', location);
   const text = await callClaude(apiKey, system, user);
   return parseJsonLoose(text);
 }
 
 async function runResearcher(apiKey, businesses, location) {
-  const system = `You are a contact researcher. Given a list of local businesses, generate realistic contact details. Return ONLY valid JSON, no markdown. Format exactly:
-{"businesses":[{"name":"string","type":"string","address":"string","size_signal":"string","contact_name":"string","contact_email":"string","contact_found":true}]}
-Use realistic owner first names. For email use format like firstname@businessname.com or info@businessname.com. Always set contact_found to true.`;
-  const user = `Generate realistic contact details for these businesses in ${location}: ${JSON.stringify(businesses.businesses)}`;
+  const system = researcher_system;
+  const user = researcher_user_tpl.replace('{location}', location).replace('{businesses}', JSON.stringify(businesses.businesses));
   const text = await callClaude(apiKey, system, user);
   return parseJsonLoose(text);
 }
 
 async function runCopywriter(apiKey, businesses) {
-  const system = `You are a copywriter for the GVSU Men's Club Soccer team writing SHORT sponsorship outreach emails (4-6 lines max). Context: ${LETTER_TEMPLATE}
-Return ONLY valid JSON, no markdown. Format exactly:
-{"emails":[{"business_name":"string","subject_line":"string","body":"string"}]}
-Each email must: address the owner by first name, mention the specific business type naturally, reference the attached sponsorship packet, invite reply to gvmensoccer@gmail.com. Sign off from Ben Grob & Nick Doletzki. Keep it warm and brief — short emails get read.`;
-  const user = `Write personalized short intro emails for each of these businesses: ${JSON.stringify(businesses.businesses)}`;
+  const system = copywriter_system_tpl.replace('{LETTER_TEMPLATE}', LETTER_TEMPLATE);
+  const user = copywriter_user_tpl.replace('{businesses}', JSON.stringify(businesses.businesses));
   const text = await callClaude(apiKey, system, user);
   return parseJsonLoose(text);
 }
 
 async function runReviewer(apiKey, emails, businesses) {
-  const system = `You are a strict email reviewer for a college soccer team sponsorship campaign. Review each email and flag issues. Return ONLY valid JSON, no markdown. Format exactly:
-{"reviews":[{"business_name":"string","status":"PASS|FLAG","reason":"string or null"}]}
-Flag if: generic/impersonal opener, missing owner name, missing business type reference, missing PDF/packet mention, missing contact info, too long (over 8 lines). Pass if warm, personal, brief, and complete.`;
-  const user = `Review these emails against these businesses: emails=${JSON.stringify(emails.emails)}, businesses=${JSON.stringify(businesses.businesses)}`;
+  const system = reviewer_system;
+  const user = reviewer_user_tpl.replace('{emails}', JSON.stringify(emails.emails)).replace('{businesses}', JSON.stringify(businesses.businesses));
   const text = await callClaude(apiKey, system, user);
   return parseJsonLoose(text);
 }
 
 async function runPersonaEval(apiKey, emails) {
-  const system = `You are a local business owner in West Michigan evaluating sponsorship emails. Score each email 1-5 on whether you would open and respond to it. Return ONLY valid JSON, no markdown. Format exactly:
-{"evaluations":[{"business_name":"string","score":3,"improvement":"string"}]}
-Score: 5=would definitely respond, 4=would likely respond, 3=might respond, 2=probably ignore, 1=definitely ignore. Improvement: one specific, actionable suggestion.`;
-  const user = `Score these sponsorship emails from a local business owner's perspective: ${JSON.stringify(emails.emails)}`;
+  const system = persona_system;
+  const user = persona_user_tpl.replace('{emails}', JSON.stringify(emails.emails));
   const text = await callClaude(apiKey, system, user);
   return parseJsonLoose(text);
 }

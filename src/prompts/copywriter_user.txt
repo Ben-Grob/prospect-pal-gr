@@ -1,0 +1,1 @@
+Write personalized short intro emails for each of these businesses: {businesses}

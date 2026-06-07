@@ -1,0 +1,1 @@
+Find local {category} businesses near {location} that might sponsor a college golf outing. Return realistic business names typical of that area.

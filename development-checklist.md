@@ -19,25 +19,25 @@ Check off items as completed. Orchestrator reads this file to know what's done a
 ---
 
 ## Phase 1 — Project Setup
-- [ ] Create GitHub repository
-- [ ] Initialize React + Tailwind project
-- [ ] Add `.env.example` with `GEMINI_API_KEY` placeholder
-- [ ] Commit all planning docs to repo root
-- [ ] Verify Gemini API key works with a test call
-- [ ] Set up `src/prompts/` directory
+- [x] Create GitHub repository
+- [x] Initialize React + Tailwind project
+- [x] Add `.env.example` with API Keys
+- [x] Commit all planning docs to repo root
+- [x] Verify Brave API key works with a test call
+- [x] Set up `src/prompts/` directory
 
 ---
 
 ## Phase 2 — Agent Harness
-- [ ] Write `.agents/orchestrator.md`
-- [ ] Write `.agents/prospector.md`
-- [ ] Write `.agents/researcher.md`
-- [ ] Write `.agents/copywriter.md`
-- [ ] Write `.agents/reviewer.md`
-- [ ] Write `.agents/persona-evaluator.md`
-- [ ] Write `.skills/prospect-search.md`
-- [ ] Write `.skills/contact-research.md`
-- [ ] Write `.skills/email-personalization.md`
+- [x] Write `.agents/orchestrator.md`
+- [x] Write `.agents/prospector.md`
+- [x] Write `.agents/researcher.md`
+- [x] Write `.agents/copywriter.md`
+- [x] Write `.agents/reviewer.md`
+- [x] Write `.agents/persona-evaluator.md`
+- [x] Write `.skills/prospect-search.md`
+- [x] Write `.skills/contact-research.md`
+- [x] Write `.skills/email-personalization.md`
 - [ ] Load letter template into `src/prompts/letter-template.md`
 
 ---
