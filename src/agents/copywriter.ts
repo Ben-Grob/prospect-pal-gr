@@ -19,6 +19,6 @@ export async function runCopywriter(apiKey, businesses, revisionFor = null) {
   if (revisionFor && revisionFor.length) {
     user += `\n\nRevise the following businesses: ${JSON.stringify(revisionFor)}`;
   }
-  const text = await callClaude(apiKey, system, user, "claude-haiku-4-5-20251001");
+  const text = await callClaude(apiKey, system, user, "claude-sonnet-4-6");
   return parseJsonLoose(text);
 }

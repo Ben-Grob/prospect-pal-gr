@@ -91,19 +91,20 @@ I still need to give feedback on another iteration. As of now, each response is 
 | Reviewer — catches planted bad email | FLAG returned | N/A (see limitations below) |
 | Persona Evaluator — scores correlate with quality | Low scores on generic emails | seems to be working (see evaluation above) |
 | End-to-end runtime | Under 3 minutes | satisfied |
-| Human spot-check — would you send this? | 4/5 emails usable | hypothetically yes (see limitations below |
+| Human spot-check — would you send this? | 4/5 emails usable | hypothetically yes (see limitations below) |
 
 ### Failure Analysis
 
 **Known limitations:**
-- Prospecting is currently simulated (Claude generates plausible businesses from training data rather than searching the live web). <-- this is the biggest issue
-- providing an api key is kind of funny for a public facing app, I may navigate this differently for the second submission
-- There is a narrow gap between a generic template and sounding fake and pretending that we have an existing relationship with the business. I hope to find the sweet spot or get closer to it.
+- The quantity of businesses is relatively small. While the information is gathered quicker and easier than doing it by hand, there may be a ceiling to the number of businesses that can be reached within a location for this reason
+- responses are not quick, the process roughly takes 5 minutes which is somewhat long for the number of emails that actually make it through
+- Content of suggested emails is often either impersonal or incorrect, with a rare balance between the two. This isn't as alarming as one may think, because the biggest value that this app aims to bring is the lead itself.
 
 **What I would do differently:**
 - I would make the switch from claude to copilot earlier, this would keep the feedback I give presistint from planning to building, and would have also made me more aware of my usage limits.
 - Spend a greater time talking with claude about what I want the final product to look like. Including a requirements document would have helped to clear any misunderstandings between me and the ai
 - Focus on the live web search first since this is whats the most important
+- Scope down my product further to ensure that I'm getting value from the beggining. It didn't make sense to have a generated email working before the lead prospecting.
 
 ---
 
@@ -138,13 +139,12 @@ This system automates the sponsorship prospecting and outreach process for the G
 
 ---
 
-## What's Next
+## Future Work
 
 ### Neccesary
-- Replace simulated prospecting with real web search via a server-side backend
-- Test the review system to make sure information is accurate
 - Refine email response's tone and content
 
 ### Nice to haves
 - Add response tracking (mark businesses as contacted, replied, or passed)
 - Expand to multiple business categories in one session
+- Allow the user to refine the copywriting prompt so people outside of mens gv soccer could use the app (or I could use it for other things)
