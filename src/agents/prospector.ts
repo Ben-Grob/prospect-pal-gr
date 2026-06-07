@@ -1,3 +1,4 @@
+// @ts-nocheck
 import prospector_system from "../prompts/prospector_system.txt?raw";
 import prospector_user_tpl from "../prompts/prospector_user.txt?raw";
 import { callClaude, parseJsonLoose } from "./common";

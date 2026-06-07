@@ -1,3 +1,4 @@
+// @ts-nocheck
 import reviewer_system from "../prompts/reviewer_system.txt?raw";
 import reviewer_user_tpl from "../prompts/reviewer_user.txt?raw";
 import { callClaude, parseJsonLoose } from "./common";

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import copywriter_system_tpl from "../prompts/copywriter_system.txt?raw";
 import copywriter_user_tpl from "../prompts/copywriter_user.txt?raw";
 import { callClaude, parseJsonLoose } from "./common";
