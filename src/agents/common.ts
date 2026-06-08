@@ -1,5 +1,5 @@
 // @ts-nocheck
-export async function callClaude(_apiKey, systemPrompt, userPrompt, model = "claude-sonnet-4-6") {
+export async function callClaude(_apiKey, systemPrompt, userPrompt, model = "claude-sonnet-4-6", options = {}) {
   const res = await fetch("/api/claude", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -8,6 +8,7 @@ export async function callClaude(_apiKey, systemPrompt, userPrompt, model = "cla
       max_tokens: 8000,
       system: systemPrompt,
       messages: [{ role: "user", content: userPrompt }],
+      ...options,
     }),
   });
 

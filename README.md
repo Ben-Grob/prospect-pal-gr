@@ -96,7 +96,7 @@ I still need to give feedback on another iteration. As of now, each response is 
 ### Failure Analysis
 
 **Known limitations:**
-- The quantity of businesses is relatively small. While the information is gathered quicker and easier than doing it by hand, there may be a ceiling to the number of businesses that can be reached within a location for this reason
+- The quantity of businesses is relatively small at times and inconsistent. While the information is gathered quicker and easier than doing it by hand, there may be a ceiling to the number of businesses that can be reached within a location for this reason
 - responses are not quick, the process roughly takes 5 minutes which is somewhat long for the number of emails that actually make it through
 - Content of suggested emails is often either impersonal or incorrect, with a rare balance between the two. This isn't as alarming as one may think, because the biggest value that this app aims to bring is the lead itself.
 
