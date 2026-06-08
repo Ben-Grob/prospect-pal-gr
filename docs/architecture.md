@@ -16,16 +16,16 @@ This system automates the sponsorship prospecting and outreach process for the G
 
 | Layer | Tool | Reason |
 |---|---|---|
-| Frontend | React + Tailwind (Lovable) | Fast to build, easy to deploy |
-| Agent Runtime | Claude Haiku 4.5 API (Google AI Studio) | allows for m |
-| Orchestration model | Claude Haiku 4.5 | Handles planning and delegation |
-| Specialist agents | Claude Haiku 4.5 | Prospecting, research, copywriting |
-| Review agents | Claude Haiku 4.5 (low temp) | Cheap, deterministic checking |
-| Web search | Claudegrounding / web search tool | Real business discovery at runtime |
+| Frontend | React + Tailwind + Vite | Fast to build, easy to deploy |
+| API Backend | Node.js (Nitro) + TanStack Start | Server-side proxies for secure API calls |
+| Orchestrator Model | Claude Sonnet 4.6 | Handles planning and delegation |
+| Specialist Agents | Claude Sonnet 4.6 | Prospecting, research, copywriting |
+| Review Agents | Claude Haiku 4.5-20251001 (temp 0.0) | Cheap, deterministic checking |
+| Web Search | Brave Search API | Real business discovery at runtime |
 | Hosting | Lovable (auto-deploy) or GitHub Pages | Instructor-accessible demo URL |
 | API keys | Environment variables only — never in code | Security |
 
-> **Multi-model note (satisfies syllabus requirement):** The Orchestrator prompt is also run against Claude Sonnet in evaluation to compare output quality across providers. Results are documented in `evaluation.md`.
+> **Note:** API keys are stored in `.env` on the server and never exposed to the browser. The `/api/claude` and `/api/search` endpoints proxy all external API calls.
 
 ---
 
@@ -38,7 +38,7 @@ USER INPUT
         │
         ▼
 ┌─────────────────────────────────┐
-│         ORCHESTRATOR            │  ← ClaudeFlash, high reasoning temp
+│         ORCHESTRATOR            │  ← Claude Sonnet 4.6, delegates tasks
 │  Reads: prd.md, personas.md,    │
 │  domain-primer.md, checklist    │
 │  Plans task breakdown           │
@@ -52,7 +52,7 @@ USER INPUT
      ▼                                               ▼
 ┌──────────────────┐                   ┌────────────────────────┐
 │ PROSPECTOR AGENT │                   │   RESEARCHER AGENT     │
-│ (Claude + web    │  ──prospect list─▶│ (Claude+ web search)  │
+│ (Claude Sonnet   │  ──prospect list─▶│ (Claude Sonnet +       │
 │  search)         │                   │                        │
 │                  │                   │ For each business:     │
 │ Searches:        │                   │ - Owner/contact name   │
@@ -68,7 +68,8 @@ USER INPUT
                                                   ▼
                                     ┌─────────────────────────┐
                                     │    COPYWRITER AGENT     │
-                                    │    (ClaudeFlash)       │
+                                    │    (Claude Sonnet 4.6,  │
+                                    │     temp=0.2)          │
                                     │                         │
                                     │ Reads: enriched prospect│
                                     │ data (name, type, owner)│
@@ -91,7 +92,7 @@ USER INPUT
                                ▼                                   ▼
                  ┌─────────────────────────┐      ┌───────────────────────────┐
                  │    REVIEWER AGENT       │      │  PERSONA EVALUATOR AGENT  │
-                 │  (Claude, temp=0) │      │  (Claude)           │
+                 │  (Haiku, temp=0.0)     │      │  (Haiku, temp=0.5)      │
                  │                         │      │                           │
                  │ Checks each email:      │      │ Reads as the business     │
                  │ ✓ Business name correct?│      │ owner would:              │
@@ -153,12 +154,12 @@ Full agent `.md` files live in `.agents/`. Summary:
 
 | Agent | Model | Role | Temperature |
 |---|---|---|---|
-| Orchestrator | Claude | Plans, delegates, assembles, logs | 0.7 |
-| Prospector | Claude + web | Finds real local businesses | 0.3 |
-| Researcher | Claude + web | Enriches with contact info | 0.3 |
-| Copywriter | Claude | Writes short personalized email intro per business | 0.6 |
-| Reviewer | Claude | Factual QA, flags errors | 0.0 |
-| Persona Evaluator | Claude | Reads as business owner, scores | 0.5 |
+| Orchestrator | Claude Sonnet 4.6 | Plans, delegates, assembles results | Default |
+| Prospector | Claude Sonnet 4.6 | Finds real local businesses via Brave Search | Default |
+| Researcher | Claude Sonnet 4.6 | Enriches with contact info via Brave Search | Default |
+| Copywriter | Claude Sonnet 4.6 | Writes short personalized email intro per business | 0.2 |
+| Reviewer | Claude Haiku 4.5-20251001 | Factual QA, flags errors | 0.0 |
+| Persona Evaluator | Claude Haiku 4.5-20251001 | Reads as business owner, scores | Default |
 
 ---
 
